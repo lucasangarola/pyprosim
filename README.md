@@ -45,5 +45,5 @@ This code is licensed under MIT license.
 ## Current Status
 ProSim provides many features which can be accessed from their SDK. Not all features have been implemented, but this implementation is a good basis to start something bigger (I believe).
 
-### Porints to Improve
+### Points to Improve
 1. Error handling can be improved digesting the original ProSim exception to extract the reason of failure and finally create a pyprosim exception class. (Just thinking loud)
