@@ -137,3 +137,17 @@ class PyProsim:
             "features": features,
             "licensee": info.Licensee,
         }
+
+    def set_dataref_value(self, dataref_name:str, dataref_value) -> None:
+        """Set dataref value ** Only works if it's been added previously
+        Attributes:
+        dataref_name -- Prosim dataref name
+        dataref_value -- New value for Prosim dataref
+        Return:
+        None
+        """
+        dataref = self.datarefs.get(dataref_name)
+        if dataref == None:
+            raise Exception("Value '" + dataref_name + "' has not been added prior to setting it")
+        
+        dataref.value = dataref_value
