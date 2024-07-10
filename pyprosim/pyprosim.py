@@ -21,6 +21,11 @@ class PyProsimDatarefException(Exception):
 
 class PyProsim:
     class Dataref:
+        """Class to represent a PyProsim dataref.
+        This class also holds the actual prosim
+        dataref object.
+        """
+
         def __init__(
             self,
             parent: "PyProsim",
@@ -31,6 +36,18 @@ class PyProsim:
             can_read: bool,
             can_write: bool,
         ):
+            """Dataref class initialization
+
+            Args:
+                parent (PyProsim): PyProsim parent class. This is to access Prosim SDK
+                name (str): Dataref name
+                description (str): Dataref description
+                data_type (object): Dataref data type. This follows the C# data type,
+                                    for example: System.Double or System.Int32
+                data_unit (str): No information about what Prosim tries to represent with this.
+                can_read (bool): Dataref is readable
+                can_write (bool): Dataref is writable
+            """
             self._parent = parent
             self._name = name
             self._description = description
@@ -38,8 +55,11 @@ class PyProsim:
             self._data_unit = data_unit
             self._can_read = can_read
             self._can_write = can_write
+            # The variable dataref_obj is the actual prosim dataref class
+            # This object will be created when this dataref is activated.
             self._dataref_obj: object = None
             self._interval = 0
+            # Flag to indicate that this PyProsim dataref has been initialized.
             self._active = False
 
         @property
@@ -76,6 +96,15 @@ class PyProsim:
 
         @property
         def value(self) -> object:
+            """Getter for Dataref value
+
+            Raises:
+                PyProsimDatarefException: This exception indicates when the dataref
+                                        has not been initialized.
+
+            Returns:
+                object: Value with type corresponding to dataref data_type definition.
+            """
             if self._dataref_obj == None:
                 raise PyProsimDatarefException(
                     f'Dataref "{self.name}" has not been initialized'
@@ -84,6 +113,21 @@ class PyProsim:
 
         @value.setter
         def value(self, value):
+            """Dataref value setter
+
+            Args:
+                value (_type_): Value to set dataref with. The type
+                                is not restricted, but this setter
+                                will attempt to 'cast' the given value
+                                to the C# type for this dataref. If the
+                                'cast' is not possible an exception will
+                                be raised.
+
+            Raises:
+                PyProsimDatarefException: This dataref cannot be written
+                PyProsimTypeException: The given value type cannot be casted to
+                                       the C# type.
+            """
             if self._can_write == False:
                 raise PyProsimDatarefException(
                     f'Dataref "{self.name}" is not writable!'
@@ -94,6 +138,15 @@ class PyProsim:
                 raise PyProsimTypeException(e)
 
         def activate(self, interval: int, on_change_callback: Callable = None):
+            """Dataref activate. This activation means that the prosim dataref
+            object is being instantiated, hence prosim has knowledge that we
+            want to read or write this dataref.
+
+            Args:
+                interval (int): How frequent Prosim should send this dataref to us (in milliseconds)
+                on_change_callback (Callable, optional): Method to be called when this dataref changes.
+                                                         Defaults to None.
+            """
             # Create Prosim dataref object
             dr = DataRef(self.name, interval, self._parent.sdk)
 
@@ -112,14 +165,20 @@ class PyProsim:
         on_connect_callback: Callable = None,
         on_disconnect_callback: Callable = None,
     ):
-        """Py prosim class init
-        Attributes:
-        prosimsdk_path -- Path to prosim SDK DLL library
-        on_connect_callback -- Callable object which will be called once we
-                               are connected to prosim
-        on_disconnect_callback -- Callable object which will be called once
-                                  prosim disconnects
+        """PyProsim class init
+
+        Args:
+            prosimsdk_path (Path): Path to prosim SDK DLL library
+            on_connect_callback (Callable, optional): Callable object which will be called once we
+                                                      are connected to prosim. Defaults to None.
+            on_disconnect_callback (Callable, optional): Callable object which will be called once
+                                                         prosim disconnects. Defaults to None.
+
+        Raises:
+            PyProsimDLLException: CLR space could not be loaded
+            PyProsimImportException: Prosim components could not be imported
         """
+
         # Load CLR namespace
         try:
             clr.AddReference(str(prosimsdk_path))
@@ -148,11 +207,15 @@ class PyProsim:
         self._datarefs: Dict[PyProsim.Dataref] = {}
 
     def _on_connect(self):
+        """Callback when PyProsim gets a connection with Prosim software"""
+        # Read dataref database from Prosim software
         self._parse_supported_datarefs()
+        # Call external callback if has been defined
         if self._on_connect_cb is not None:
             self._on_connect_cb()
 
     def _parse_supported_datarefs(self):
+        """Request and parse Prosim dataref database"""
         self._datarefs: Dict[PyProsim.Dataref] = {}
         for dr in self.sdk.getDataRefDescriptions():
             # Parse data type
@@ -191,6 +254,7 @@ class PyProsim:
             else:
                 PyProsimTypeException(f'Data Type "{dr.DataType}" unknown')
 
+            # Create PyProsim dataref class
             self._datarefs[dr.Name] = self.Dataref(
                 parent=self,
                 name=dr.Name,
@@ -202,30 +266,29 @@ class PyProsim:
             )
 
     def connect(self, ip_addr: str, synchronous: bool = True) -> None:
-        """Simply connect to Prosim
-        Attributes:
-        ip_addr -- Host IP address when ProSim is running
-        synchronous -- Basically blocking mode whne True
+        """Open connection with Prosim Server
 
-        Return:
-        None
+        Args:
+            ip_addr (str): Host IP address when ProSim is running. Use "localhost"
+                           if prosim runs in the same PC as this script.
+            synchronous (bool, optional): Blocking mode when True. Defaults to True.
         """
         self.sdk.Connect(ip_addr, synchronous)
 
     def activate_dataref(
         self, dataref_name: str, interval: int, on_change_callback: Callable = None
     ) -> None:
-        """Add a dataref request to ProSim. Then prosim can periodically send
-        this value back.
-        This dataref object is then accesible through this class datarfes dictionary,
-        or getter method.
-        Attributes:
-        dataref_name -- Prosim dataref name
-        interval -- How frequent prosim should send this dataref in miliseconds
-        on_change_callback -- Callable object which will be called when dataref
-                              changes.
-        Return:
-        None
+        """Inform Prosim we want to read/write this dataref. Adding interval > 0
+        Prosim software will periodically send this value back to us.
+
+        Args:
+            dataref_name (str): Prosim dataref name
+            interval (int): How frequent prosim should send this dataref in miliseconds
+            on_change_callback (Callable, optional): Callable object which will be called when dataref
+                                                     changes. Defaults to None.
+
+        Raises:
+            PyProsimDatarefException: Unknown dataref name. Not part of prosim database
         """
         if dataref_name not in self._datarefs:
             raise PyProsimDatarefException(
@@ -235,12 +298,16 @@ class PyProsim:
         self._datarefs[dataref_name].activate(interval, on_change_callback)
 
     def get_value(self, dataref_name: str) -> object:
-        """Get dataref value.
-        Attributes:
-        dataref_name -- Prosim dataref name
-        Return:
-        Prosim dataref value or None if dataref has not been
-        added yet.
+        """Get dataref value
+
+        Args:
+            dataref_name (str): Prosim dataref name
+
+        Raises:
+            PyProsimDatarefException: Unknown dataref name. Not part of prosim database.
+
+        Returns:
+            object: Dataref value with type as specified by prosim dataref database
         """
         if dataref_name not in self._datarefs:
             raise PyProsimDatarefException(
@@ -249,13 +316,11 @@ class PyProsim:
 
         return self._datarefs[dataref_name].value
 
-    def get_dataref_database(self) -> list:
-        """Request the full list of avaiable datarefs from ProSim
-        Attributes:
-        None
-        Return:
-        list -- List of dictionaries containing all info about the
-                datarefs
+    def get_dataref_database(self) -> dict:
+        """Returns dictionary with all available Prosim datarefs
+
+        Returns:
+            dict: All available Prosim datarefs
         """
         dataref_database = {}
         for name, dr in self._datarefs.items():
@@ -271,11 +336,10 @@ class PyProsim:
         return dataref_database
 
     def get_info(self) -> dict:
-        """Get simulator information
-        Attributes:
-        None
-        Return:
-        dict -- Dictionary with sim information
+        """General Prosim information like licensee and etc.
+
+        Returns:
+            dict: General information.
         """
         info = self.sdk.getLicensingInfo()
         features = []
@@ -288,6 +352,20 @@ class PyProsim:
         }
 
     def set_value(self, dataref_name: str, value: object):
+        """Set dataref value
+
+        Args:
+            dataref_name (str): Prosim dataref name
+            value (object): Value to set dataref with. The type
+                            is not restricted, but this setter
+                            will attempt to 'cast' the given value
+                            to the C# type for this dataref. If the
+                            'cast' is not possible an exception will
+                            be raised.
+
+        Raises:
+            PyProsimDatarefException: Unknown dataref name. Not part of prosim database.
+        """
         if dataref_name not in self._datarefs:
             raise PyProsimDatarefException(
                 f'Dataref "{dataref_name}" is not in Prosim database'
