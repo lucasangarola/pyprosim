@@ -15,25 +15,32 @@ https://download.prosim-ar.com/ProSimSDK/
 ## Getting Started
 
 ### Requirements
-This implementation has been tested with ```Python 3.11```. I highly recommend to use this version.
+Use ```Python 3.11``` or above.
 
-To run the examples I recommend to use a virtual env of your choice.
+To run the examples I recommend to use a virtual environment of your choice.
 
-Install requirements:
+Update pip and install requirements:
 
 ```Bash
+python -m pip install --upgrade pip
 pip install -r requirements.txt
 ```
 
+### Installing the Module
+
+```Bash
+pip install .
+```
+
 ### Running Examples
+
+**Notes:** The examples has been tested with ```ProSim B738``` version ```3.29``` this means the datarefs used in the examples may not be available in your ProSim. If this is teh case please use a valid dataref for your sim for the sake of testing.
 
 In the route directory of this repository run:
 
 ```Bash
 python examples/<name of the example here>.py
 ```
-
-**Notes:** The examples has been tested with ```ProSim B738``` version ```3.29``` this means the datarefs used in the examples may not be available in your ProSim. If this is teh case please use a valid dataref for your sim for the sake of testing.
 
 ## Contributing
 
