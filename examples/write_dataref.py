@@ -1,19 +1,10 @@
 from pathlib import Path
 import time
 from enum import Enum
+from pyprosim import PyProsim
 
 # This file path
 this_path = Path(__file__).resolve().parent
-
-# NOTE: This is only required to allow the system to find the pyprosim module without
-# the need of installing it.
-# You can avoid this if your main application is located at the same level that the pyprosim module.
-import sys
-
-sys.path.append(f"{this_path}/../pyprosim")
-
-# Import the module
-from pyprosim import PyProsim
 
 # SDK DLL file path. NOTE: Exclude the extension name.
 dll_path = this_path.joinpath("../", "prosimsdk", "ProSimSDK")
