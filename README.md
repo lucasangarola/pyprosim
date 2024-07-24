@@ -33,6 +33,8 @@ In the route directory of this repository run:
 python examples/<name of the example here>.py
 ```
 
+**Notes:** The examples has been tested with ```ProSim B738``` version ```3.29``` this means the datarefs used in the examples may not be available in your ProSim. If this is teh case please use a valid dataref for your sim for the sake of testing.
+
 ## Contributing
 
 Contributing is always welcome, please submit the issues/improvements to this project to keep a good documentation.
