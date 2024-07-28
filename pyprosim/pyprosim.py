@@ -326,12 +326,10 @@ class PyProsim:
         for name, dr in self._datarefs.items():
             dataref_database[dr.name] = {
                 "description": dr.description,
-                "data_type": dr.data_type,
+                "data_type": dr.data_type.__name__,
                 "data_unit": dr.data_unit,
                 "read_access": dr.can_read,
                 "write_access": dr.can_write,
-                "active": dr.active,
-                "interval": dr.interval,
             }
         return dataref_database
 
