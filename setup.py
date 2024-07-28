@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name="pyprosim",
-    version="0.1.0",
+    version="0.2.0",
     description="Python wrapper for ProSim SDK",
     url="https://github.com/lucasangarola/pyprosim.git",
     author="Lucas M. Angarola",
