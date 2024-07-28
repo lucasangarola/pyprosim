@@ -370,3 +370,22 @@ class PyProsim:
             )
 
         self._datarefs[dataref_name].value = value
+
+    def get_dataref_obj(self, dataref_name: str) -> Dataref:
+        """Get PyProsim dataref object reference
+
+        Args:
+            dataref_name (str): Name of dataref as per Prosim specification
+
+        Raises:
+            PyProsimDatarefException: Dataref requested does not exist
+
+        Returns:
+            Dataref: Reference to dataref object
+        """
+        if dataref_name not in self._datarefs:
+            raise PyProsimDatarefException(
+                f'Dataref "{dataref_name}" is not in Prosim database'
+            )
+
+        return self._datarefs[dataref_name]
