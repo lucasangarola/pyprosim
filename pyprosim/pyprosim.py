@@ -340,9 +340,17 @@ class PyProsim:
             dict: General information.
         """
         info = self.sdk.getLicensingInfo()
+
+        # Features seems to be Prosim software dependent.
+        # Looks like in Prosim B38M this is not existent, so is
+        # better to avoid propagating an exception for this.
         features = []
-        for f in info.Features:
-            features.append(str(f))
+        try:
+            for f in info.Features:
+                features.append(str(f))
+        except:
+            pass
+
         return {
             "mode": info.Mode,
             "features": features,
